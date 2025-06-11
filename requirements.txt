@@ -1,0 +1,34 @@
+# Financial Agent - Core Dependencies
+# Data handling and computation
+pandas
+numpy
+scipy
+
+# Financial data acquisition
+yfinance
+pandas-datareader
+
+# Technical analysis (using ta instead of talib for better compatibility)
+ta
+
+# Scientific computing and similarity metrics
+scikit-learn
+
+# Visualization (for testing and validation)
+matplotlib
+seaborn
+
+# Progress tracking
+tqdm
+
+# Configuration management
+python-decouple
+pyyaml
+
+# Testing
+pytest
+pytest-cov
+
+# Development
+black
+flake8 

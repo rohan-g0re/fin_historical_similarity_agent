@@ -1,0 +1,149 @@
+# Financial Agent - .gitignore
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ========================
+# Virtual Environments
+# ========================
+financial_agent_env/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ========================
+# IDE & Editors
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ========================
+# Testing & Coverage
+# ========================
+tests/
+test_*.py
+*_test.py
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# ========================
+# Data & Cache Files
+# ========================
+data/
+cache/
+*.csv
+*.json
+*.pickle
+*.pkl
+*.db
+*.sqlite
+*.sqlite3
+
+# ========================
+# Logs & Output
+# ========================
+*.log
+logs/
+output/
+results/
+
+# ========================
+# Configuration & Secrets
+# ========================
+.env
+.env.local
+.env.production
+config.local.yaml
+secrets.yaml
+api_keys.txt
+
+# ========================
+# OS Specific
+# ========================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# ========================
+# Jupyter Notebooks
+# ========================
+.ipynb_checkpoints
+
+# ========================
+# Documentation
+# ========================
+docs/_build/
+
+# ========================
+# Temporary Files
+# ========================
+*.tmp
+*.temp
+temp/
+tmp/
+
+# ========================
+# Financial Data
+# ========================
+historical_data/
+market_data/
+*.yfinance_cache
+
+# ========================
+# Model Files (if any)
+# ========================
+*.model
+*.joblib
+models/
+
+# ========================
+# Backup Files
+# ========================
+*.bak
+*.backup 

@@ -1,0 +1,70 @@
+# Financial Agent Configuration
+
+# Data Collection Settings
+data_collection:
+  start_date: "2000-01-01"
+  end_date: null  # null means current date
+  data_source: "yfinance"  # primary data source
+  fallback_sources: ["pandas_datareader"]
+  
+# Technical Indicators Configuration
+indicators:
+  rsi:
+    period: 14
+    overbought: 70
+    oversold: 30
+  
+  macd:
+    fast_period: 12
+    slow_period: 26
+    signal_period: 9
+  
+  bollinger_bands:
+    period: 20
+    std_dev: 2
+  
+  volume_roc:
+    period: 10
+  
+  atr:
+    period: 14
+    percentile_window: 252  # 1 year for percentile calculation
+
+# 7-Day Window Configuration
+window_settings:
+  lookback_days: 7
+  feature_types:
+    - "price_returns"
+    - "intraday_volatility"
+    - "cumulative_returns"
+    - "technical_indicators"
+  
+  normalization: "z_score"  # z_score, min_max, or none
+
+# Similarity Detection Settings
+similarity:
+  method: "cosine"  # cosine, euclidean, correlation
+  min_gap_days: 30  # minimum days between current and historical periods
+  similarity_threshold: 0.65  # minimum similarity score to consider
+  max_results: 50  # maximum similar periods to return
+
+# Basic Filtering Settings
+filtering:
+  volatility_regime_tolerance: 20  # ATR percentile tolerance (±)
+  trend_direction_match: true  # require same trend direction
+  rsi_zone_match: true  # require same RSI zone (oversold/neutral/overbought)
+  
+# Data Storage Settings
+storage:
+  cache_data: true
+  cache_duration_days: 1
+  data_directory: "data"
+  results_directory: "results"
+
+# Testing Configuration
+testing:
+  test_stocks: ["AAPL", "MSFT", "GOOGL"]
+  test_date_ranges:
+    - ["2020-03-01", "2020-04-01"]  # COVID crash
+    - ["2008-09-01", "2008-10-01"]  # Financial crisis
+    - ["2018-12-01", "2019-01-01"]  # Tech selloff 
