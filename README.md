@@ -20,7 +20,86 @@ The Financial Agent is a sophisticated pattern matching system that analyzes cur
 - **📊 Beautiful Terminal Output**: Professional formatting with progress indicators
 - **⚙️ Interactive Mode**: Guided prompts for beginners
 - **💾 Automatic Export**: Results saved to timestamped JSON files
+- **📝 Business Reports**: Generate natural language reports for stakeholders
 - **🔧 Flexible Options**: Customize number of results and detail level
+
+## 📊 **System Workflow**
+
+```mermaid
+flowchart TD
+    A["`👤 **User Input**
+    Stock Symbol + Options`"] --> B{"`⚙️ **Mode Selection**
+    CLI or Interactive`"}
+    
+    B -->|CLI Args| C["`🔧 **Configuration**
+    Parse CLI Arguments`"]
+    B -->|Interactive| D["`💬 **Interactive Prompts**
+    Stock Symbol & Options`"]
+    
+    C --> E["`📊 **Data Collection**
+    Yahoo Finance API`"]
+    D --> E
+    
+    E --> F["`📈 **Technical Analysis**
+    Calculate 5 Indicators
+    • RSI
+    • MACD Signal  
+    • Bollinger Bands
+    • Volume ROC
+    • ATR Percentile`"]
+    
+    F --> G["`🔍 **Window Creation**
+    7-day sliding windows
+    62-feature vectors`"]
+    
+    G --> H["`🎯 **Current Analysis**
+    Extract current market state`"]
+    
+    H --> I["`🔍 **Pattern Matching**
+    Cosine similarity search
+    vs historical windows`"]
+    
+    I --> J["`🧪 **Market Filtering**
+    Filter by regime:
+    • Volatility level
+    • Trend direction
+    • RSI zone`"]
+    
+    J --> K["`📊 **Ranking & Results**
+    Sort by similarity score
+    Format for display`"]
+    
+    K --> L["`💾 **JSON Export**
+    analysis_SYMBOL_DATE.json`"]
+    
+    L --> M{"`📝 **Report Generation?**
+    --generate-report flag`"}
+    
+    M -->|Yes| N["`📄 **Natural Language Report**
+    Business-friendly analysis
+    • Executive Summary
+    • Risk Assessment  
+    • Future Outlook
+    • Historical Comparisons`"]
+    
+    M -->|No| O["`✅ **Terminal Display**
+    Formatted results
+    Top-K similar periods`"]
+    
+    N --> P["`💾 **Report Export**
+    analysis_SYMBOL_DATE_BUSINESS_REPORT.txt`"]
+    
+    P --> O
+    O --> Q["`🎉 **Complete**
+    Analysis finished`"]
+    
+    style A fill:#e1f5fe
+    style E fill:#f3e5f5
+    style F fill:#e8f5e8
+    style I fill:#fff3e0
+    style N fill:#fce4ec
+    style Q fill:#e8f5e8
+```
 
 ## 🔧 **Technical Architecture**
 
@@ -80,8 +159,31 @@ Analyzes Apple stock with default settings (top 10 similar periods).
 ```bash
 python run_analysis.py MSFT --top-k 15        # Top 15 results for Microsoft
 python run_analysis.py GOOGL --detailed       # Detailed analysis for Google
-python run_analysis.py TSLA --top-k 20 --detailed  # Custom Tesla analysis
+python run_analysis.py AAPL --generate-report # Generate business report
+python run_analysis.py TSLA --top-k 20 --detailed --generate-report  # Full analysis + report
 ```
+
+### **📝 Business Reports**
+Generate natural language reports for business stakeholders:
+
+```bash
+# Generate report during analysis
+python run_analysis.py AAPL --generate-report
+
+# Generate report from existing JSON file
+python generate_report.py analysis_AAPL_20250611_143413.json
+
+# Custom output location
+python generate_report.py analysis_MSFT_20250611_143413.json --output reports/microsoft_analysis.txt
+```
+
+**Business reports include:**
+- 📊 Executive Summary with investment thesis
+- 📈 Current Market Analysis in plain English  
+- 🔍 Historical Pattern Analysis with seasonal insights
+- ⚠️ Risk Assessment with position sizing recommendations
+- 🔮 Future Outlook with multi-timeframe predictions
+- 📋 Detailed Historical Comparisons with outcomes
 
 ### **⚙️ Interactive Mode**
 ```bash
@@ -95,6 +197,7 @@ Guided prompts for stock symbol and analysis preferences.
 | `symbol` | Stock symbol to analyze | `AAPL`, `MSFT`, `GOOGL` |
 | `--top-k N` | Number of results (1-50, default: 10) | `--top-k 15` |
 | `--detailed` | Show detailed analysis for top match | `--detailed` |
+| `--generate-report` | Generate business-friendly natural language report | `--generate-report` |
 | `--interactive` | Interactive mode with prompts | `--interactive` |
 | `--help` | Show help message | `--help` |
 
@@ -268,18 +371,21 @@ financial_agent/
 │   │   └── data_collector.py      # Data collection & caching
 │   ├── indicators/
 │   │   └── technical_indicators.py # Technical indicator calculations
-│   └── similarity/
-│       ├── window_creator.py      # 7-day window creation
-│       ├── similarity_calculator.py # Cosine similarity engine
-│       └── pattern_searcher.py    # Complete pattern matching workflow
+│   ├── similarity/
+│   │   ├── window_creator.py      # 7-day window creation
+│   │   ├── similarity_calculator.py # Cosine similarity engine
+│   │   └── pattern_searcher.py    # Complete pattern matching workflow
+│   └── reports/
+│       ├── __init__.py           # Reports module initialization
+│       └── natural_language_generator.py # Business report generation
 ├── financial_agent_env/           # Virtual environment (gitignored)
 ├── run_analysis.py                # 💻 CLI Interface - Main entry point
+├── generate_report.py             # 📝 Standalone report generator
 ├── config.yaml                    # Configuration file
 ├── requirements.txt              # Python dependencies (latest versions)
-├── .gitignore                    # Comprehensive git exclusions
+├── .gitignore                    # Comprehensive git exclusions (includes analysis files)
 ├── README.md                     # This file
-├── CLI_USAGE_GUIDE.md            # Detailed CLI usage examples
-└── COMPLETE_DEVELOPMENT_BIBLE.md # Comprehensive development documentation
+└── BIBLE.md                      # Comprehensive development documentation
 ```
 
 ## 🔄 **Workflow**
@@ -293,20 +399,33 @@ financial_agent/
 
 ## 💾 **Automatic Results Export**
 
-The CLI automatically saves complete analysis results to timestamped JSON files:
+The CLI automatically saves complete analysis results to timestamped files:
 
+### **JSON Technical Data**
 ```
 analysis_AAPL_20240101_143052.json
 analysis_TSLA_20240101_143125.json
 ```
 
-These files contain:
+**Contents:**
 - Complete similarity analysis data
 - Market regime classifications  
 - Feature vectors and metadata
 - Processing statistics and performance metrics
 
-Perfect for further analysis, reporting, or integration with other tools!
+### **Business Reports** (Optional)
+```
+analysis_AAPL_20240101_143052_BUSINESS_REPORT.txt
+analysis_TSLA_20240101_143125_BUSINESS_REPORT.txt
+```
+
+**Contents:**
+- Executive summary with investment thesis
+- Risk assessment with position sizing
+- Future outlook with probability estimates
+- Historical comparisons with outcomes
+
+Perfect for technical analysis, business presentations, and stakeholder reports!
 
 ## 🎯 **Use Cases**
 
@@ -314,6 +433,8 @@ Perfect for further analysis, reporting, or integration with other tools!
 - **Market Research**: Analyze historical market behavior patterns  
 - **Trading Strategy**: Identify similar setups for strategy development
 - **Risk Management**: Understand potential outcomes based on historical patterns
+- **Business Reporting**: Generate executive-ready analysis reports
+- **Stakeholder Communication**: Translate technical analysis into business language
 - **Market Analysis**: Compare current conditions with historical periods
 - **Automated Analysis**: CLI integration for systematic market scanning
 

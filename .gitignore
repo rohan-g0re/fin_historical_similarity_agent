@@ -136,6 +136,13 @@ market_data/
 *.yfinance_cache
 
 # ========================
+# Analysis Reports & Output
+# ========================
+analysis_*.json
+analysis_*_BUSINESS_REPORT.txt
+*_FIXED_REPORT.txt
+
+# ========================
 # Model Files (if any)
 # ========================
 *.model

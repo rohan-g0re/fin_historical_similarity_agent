@@ -7,6 +7,7 @@ Usage:
     python run_analysis.py AAPL
     python run_analysis.py MSFT --top-k 15
     python run_analysis.py --interactive
+    python run_analysis.py AAPL --generate-report
 """
 
 import sys
@@ -20,6 +21,7 @@ sys.path.append(str(Path(__file__).parent / "src"))
 
 from src.core.config_manager import ConfigManager
 from src.similarity.pattern_searcher import PatternSearcher
+from src.reports.natural_language_generator import NaturalLanguageReportGenerator
 
 
 def print_banner():
@@ -174,11 +176,11 @@ def get_user_input():
     while True:
         choice = input("Choose option (1-4): ").strip()
         if choice == "1":
-            return symbol, 5, False
+            top_k, detailed = 5, False
         elif choice == "2":
-            return symbol, 10, False
+            top_k, detailed = 10, False
         elif choice == "3":
-            return symbol, 20, False
+            top_k, detailed = 20, False
         elif choice == "4":
             while True:
                 try:
@@ -190,12 +192,17 @@ def get_user_input():
                     print("Please enter a valid number.")
             
             detailed = input("Show detailed analysis for top result? (y/n): ").strip().lower() == 'y'
-            return symbol, top_k, detailed
         else:
             print("Please choose 1, 2, 3, or 4.")
+            continue
+        
+        # Ask about natural language report
+        generate_report = input("\n📝 Generate business-friendly natural language report? (y/n): ").strip().lower() == 'y'
+        
+        return symbol, top_k, detailed, generate_report
 
 
-def run_analysis(symbol, top_k=10, show_detailed=False):
+def run_analysis(symbol, top_k=10, show_detailed=False, generate_report=False):
     """Run the complete pattern analysis"""
     print(f"🔄 Analyzing {symbol}...")
     print("This may take a few moments...\n")
@@ -230,8 +237,12 @@ def run_analysis(symbol, top_k=10, show_detailed=False):
             if show_detailed and results.get('similar_patterns'):
                 print_detailed_analysis(results['similar_patterns'][0], 1)
             
-            # Save results to file
-            save_results(symbol, results)
+            # Save results to file (ALWAYS preserve this functionality)
+            json_filename = save_results(symbol, results)
+            
+            # Generate natural language report if requested
+            if generate_report:
+                generate_natural_language_report(json_filename, symbol)
             
         else:
             print(f"❌ Analysis failed: No results returned")
@@ -255,8 +266,56 @@ def save_results(symbol, results):
         with open(filename, 'w') as f:
             json.dump(results, f, indent=2, default=str)
         print(f"💾 Results saved to: {filename}")
+        return filename  # Return filename for report generation
     except Exception as e:
         print(f"⚠️  Could not save results: {e}")
+        return None
+
+
+def generate_natural_language_report(json_filename, symbol):
+    """Generate and save a natural language business report"""
+    if not json_filename:
+        print("❌ Cannot generate report: JSON file not available")
+        return
+    
+    try:
+        print(f"\n📝 Generating natural language report for {symbol}...")
+        
+        # Initialize report generator
+        generator = NaturalLanguageReportGenerator()
+        
+        # Load JSON data
+        with open(json_filename, 'r') as f:
+            analysis_data = json.load(f)
+        
+        # Generate report
+        report = generator.generate_full_report(analysis_data)
+        
+        # Save report to file
+        report_filename = json_filename.replace('.json', '_BUSINESS_REPORT.txt')
+        with open(report_filename, 'w', encoding='utf-8') as f:
+            f.write(report)
+        
+        print(f"📄 Business report saved to: {report_filename}")
+        print(f"📊 Report contains executive summary, risk assessment, and actionable insights")
+        
+        # Optionally display a brief preview
+        lines = report.split('\n')
+        preview_lines = []
+        for line in lines:
+            preview_lines.append(line)
+            if len(preview_lines) >= 15:  # Show first 15 lines as preview
+                break
+        
+        print(f"\n📋 REPORT PREVIEW:")
+        print("─" * 60)
+        print('\n'.join(preview_lines))
+        print("─" * 60)
+        print(f"📖 Full report available in: {report_filename}")
+        
+    except Exception as e:
+        print(f"❌ Error generating natural language report: {str(e)}")
+        print("💡 JSON analysis was still saved successfully")
 
 
 def main():
@@ -269,8 +328,9 @@ Examples:
   python run_analysis.py AAPL                    # Analyze Apple with default settings
   python run_analysis.py MSFT --top-k 15         # Show top 15 results for Microsoft
   python run_analysis.py GOOGL --detailed        # Show detailed analysis for Google
+  python run_analysis.py AAPL --generate-report  # Generate business report for Apple
   python run_analysis.py --interactive           # Interactive mode with prompts
-  python run_analysis.py TSLA --top-k 20 --detailed  # Custom analysis for Tesla
+  python run_analysis.py TSLA --top-k 20 --detailed --generate-report  # Full analysis with report
         """
     )
     
@@ -294,6 +354,12 @@ Examples:
     )
     
     parser.add_argument(
+        '--generate-report',
+        action='store_true',
+        help='Generate a business-friendly natural language report'
+    )
+    
+    parser.add_argument(
         '--interactive',
         action='store_true',
         help='Run in interactive mode with prompts'
@@ -305,13 +371,13 @@ Examples:
     
     # Interactive mode
     if args.interactive or not args.symbol:
-        symbol, top_k, detailed = get_user_input()
-        run_analysis(symbol, top_k, detailed)
+        symbol, top_k, detailed, generate_report = get_user_input()
+        run_analysis(symbol, top_k, detailed, generate_report)
     else:
         # Command line mode
         symbol = args.symbol.upper()
         top_k = min(args.top_k, 50)  # Cap at 50
-        run_analysis(symbol, top_k, args.detailed)
+        run_analysis(symbol, top_k, args.detailed, args.generate_report)
     
     print("\n" + "=" * 60)
     print("🎉 Analysis Complete! Thank you for using Financial Agent.")
