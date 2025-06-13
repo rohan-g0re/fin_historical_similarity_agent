@@ -195,10 +195,10 @@ def get_user_input():
         else:
             print("Please choose 1, 2, 3, or 4.")
             continue
-        
+
         # Ask about natural language report
         generate_report = input("\n📝 Generate business-friendly natural language report? (y/n): ").strip().lower() == 'y'
-        
+
         return symbol, top_k, detailed, generate_report
 
 
