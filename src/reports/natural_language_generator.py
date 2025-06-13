@@ -1,7 +1,33 @@
 #!/usr/bin/env python3
 """
-Natural Language Report Generator
-Converts technical financial analysis into business-friendly narratives.
+Natural Language Report Generator Module
+
+This module transforms technical financial analysis data into comprehensive, business-friendly
+natural language reports. It serves as the critical bridge between complex quantitative analysis
+and actionable investment insights.
+
+Core Functionality:
+- Converts similarity analysis results into narrative format
+- Generates executive summaries with key investment insights
+- Creates risk assessments with specific mitigation strategies
+- Provides historical context and pattern analysis
+- Generates business-friendly recommendations and outlook
+
+Report Structure:
+1. Executive Summary - High-level findings and investment thesis
+2. Current Market Analysis - Technical indicator interpretation
+3. Historical Pattern Analysis - Seasonal and decade-based insights
+4. Risk Assessment - Comprehensive risk evaluation and mitigation
+5. Future Outlook - Multi-timeframe projections based on historical patterns
+6. Detailed Comparisons - Individual historical pattern analysis
+7. Technical Summary - Raw technical data and methodology
+
+Business Intelligence Features:
+- Confidence scoring based on pattern similarity
+- Risk categorization with position sizing recommendations
+- Seasonal and temporal pattern recognition
+- Market regime classification and interpretation
+- Historical success rate analysis across multiple timeframes
 """
 
 import json
@@ -12,10 +38,38 @@ import statistics
 
 class NaturalLanguageReportGenerator:
     """
-    Generates business-friendly natural language reports from technical analysis data.
+    Core Natural Language Report Generation Engine
+    
+    This class orchestrates the transformation of technical analysis data into 
+    comprehensive business-friendly reports. It combines quantitative analysis
+    with qualitative interpretation to provide actionable investment insights.
+    
+    Architecture:
+    - Modular report generation with distinct sections
+    - Risk-based categorization and assessment framework
+    - Statistical analysis of historical pattern outcomes
+    - Confidence scoring based on similarity metrics
+    - Business-friendly language generation with specific recommendations
+    
+    Report Generation Process:
+    1. Data validation and preprocessing
+    2. Statistical analysis of historical patterns
+    3. Risk assessment and confidence scoring
+    4. Narrative generation with business context
+    5. Recommendation synthesis and formatting
     """
     
     def __init__(self):
+        """
+        Initialize the report generator with predefined risk and confidence frameworks.
+        
+        Sets up:
+        - Risk level thresholds for categorizing downside probability
+        - Confidence level mappings based on similarity scores
+        - Business-friendly descriptions for quantitative measures
+        """
+        # Risk assessment framework based on downside probability thresholds
+        # Used to categorize investment risk levels with appropriate descriptions
         self.risk_levels = {
             'low': {'threshold': 20, 'description': 'low risk'},
             'moderate': {'threshold': 50, 'description': 'moderate risk'},
@@ -23,6 +77,8 @@ class NaturalLanguageReportGenerator:
             'very_high': {'threshold': 100, 'description': 'very high risk'}
         }
         
+        # Confidence level framework based on similarity score thresholds
+        # Maps quantitative similarity to qualitative confidence descriptions
         self.confidence_levels = {
             'very_high': {'threshold': 0.95, 'description': 'very high confidence'},
             'high': {'threshold': 0.90, 'description': 'high confidence'},
@@ -33,52 +89,106 @@ class NaturalLanguageReportGenerator:
 
     def generate_full_report(self, analysis_data: Dict[str, Any]) -> str:
         """
-        Generate a complete natural language report from analysis data.
+        Generate Complete Business-Friendly Investment Report
+        
+        This is the main orchestration method that coordinates the generation of a 
+        comprehensive natural language report from technical analysis data. It follows
+        a structured approach to present complex quantitative findings in an accessible,
+        actionable format for business decision-making.
+        
+        Report Architecture:
+        - Executive Summary: High-level investment thesis and key findings
+        - Current Market Analysis: Technical indicator interpretation and market conditions
+        - Historical Pattern Analysis: Seasonal patterns and historical context
+        - Risk Assessment: Comprehensive risk evaluation with mitigation strategies
+        - Future Outlook: Multi-timeframe projections based on historical precedents
+        - Detailed Comparisons: Individual analysis of most similar historical periods
+        - Technical Summary: Methodology overview and raw technical data
         
         Args:
-            analysis_data: The complete analysis JSON data
-            
+            analysis_data: Complete analysis results from pattern_searcher including:
+                - symbol: Stock symbol analyzed
+                - current_window: Current market data and technical indicators
+                - similar_patterns: List of historically similar periods with outcomes
+                - search_summary: Metadata about the analysis process
+                
         Returns:
-            A formatted natural language report
+            Formatted natural language report ready for business presentation
+            
+        Business Value:
+        - Transforms complex quantitative analysis into actionable insights
+        - Provides specific risk assessment and position sizing recommendations
+        - Offers historical context for informed decision-making
+        - Delivers clear investment thesis with supporting evidence
         """
         report_sections = []
         
-        # Header
+        # Header Section: Basic identification and analysis period
+        # Sets professional context and provides key metadata
         report_sections.append(self._generate_header(analysis_data))
         
-        # Executive Summary
+        # Executive Summary: Critical for decision-makers who need key insights quickly
+        # Synthesizes main findings into investment thesis and recommendations
         report_sections.append(self._generate_executive_summary(analysis_data))
         
-        # Current Market Analysis
+        # Current Market Analysis: Interprets technical indicators in business language
+        # Translates RSI, MACD, volatility metrics into market condition assessment
         report_sections.append(self._generate_current_analysis(analysis_data))
         
-        # Historical Pattern Analysis
+        # Historical Pattern Analysis: Provides evidence base for projections
+        # Analyzes seasonal patterns, decade trends, and pattern reliability
         report_sections.append(self._generate_pattern_analysis(analysis_data))
         
-        # Risk Assessment
+        # Risk Assessment: Critical for position sizing and risk management
+        # Quantifies downside probability and provides specific mitigation strategies
         report_sections.append(self._generate_risk_assessment(analysis_data))
         
-        # Future Outlook
+        # Future Outlook: Multi-timeframe projections based on historical evidence
+        # Provides specific probability-based forecasts with supporting rationale
         report_sections.append(self._generate_outlook(analysis_data))
         
-        # Detailed Historical Comparisons
+        # Detailed Historical Comparisons: Deep dive into most similar periods
+        # Offers specific historical precedents with actual outcomes
         report_sections.append(self._generate_detailed_comparisons(analysis_data))
         
-        # Technical Summary
+        # Technical Summary: Methodology transparency and raw data
+        # Provides technical context and validates analytical approach
         report_sections.append(self._generate_technical_summary(analysis_data))
         
-        # Footer
+        # Footer: Professional disclaimers and metadata
+        # Ensures proper risk disclosure and report attribution
         report_sections.append(self._generate_footer())
         
+        # Combine all sections with proper spacing for readability
         return "\n\n".join(report_sections)
 
     def _generate_header(self, data: Dict[str, Any]) -> str:
-        """Generate report header with basic info."""
+        """
+        Generate Professional Report Header
+        
+        Creates the formal header section that establishes report context and 
+        provides essential metadata for the analysis. This section serves as 
+        the professional identifier and sets expectations for the analysis type.
+        
+        Args:
+            data: Analysis data containing symbol and current window information
+            
+        Returns:
+            Formatted header string with symbol, dates, and analysis type
+            
+        Business Purpose:
+        - Provides clear identification of the analyzed security
+        - Documents the specific time period under analysis
+        - Establishes the analytical methodology being employed
+        - Creates professional presentation format for stakeholders
+        """
+        # Extract core identification data with safe defaults
         symbol = data.get('symbol', 'Unknown')
         current_window = data.get('current_window', {})
         start_date = current_window.get('window_start_date', 'Unknown')
         end_date = current_window.get('window_end_date', 'Unknown')
         
+        # Format professional header with clear visual separation
         return f"""
 ═══════════════════════════════════════════════════════════════════════════════
                         FINANCIAL PATTERN ANALYSIS REPORT
@@ -91,11 +201,38 @@ Analysis Type: Historical Pattern Matching & Similarity Analysis
         """
 
     def _generate_executive_summary(self, data: Dict[str, Any]) -> str:
-        """Generate executive summary section."""
+        """
+        Generate Executive Summary - The Most Critical Report Section
+        
+        This method creates the executive summary that synthesizes complex analysis
+        into actionable investment insights. It's designed for senior decision-makers
+        who need rapid understanding of key findings and investment implications.
+        
+        Process:
+        1. Evaluates pattern availability and quality
+        2. Analyzes outcomes from most similar historical periods
+        3. Synthesizes risk assessment and confidence levels
+        4. Generates clear investment thesis and recommendations
+        
+        Args:
+            data: Complete analysis data with patterns and search results
+            
+        Returns:
+            Executive summary section with key findings and investment thesis
+            
+        Business Critical Elements:
+        - Investment thesis based on historical evidence
+        - Risk level assessment with quantitative backing
+        - Success rate analysis from similar historical periods
+        - Confidence assessment based on pattern similarity
+        - Clear actionable recommendations for decision-makers
+        """
+        # Extract core data for executive analysis
         symbol = data.get('symbol', 'Unknown')
         similar_patterns = data.get('similar_patterns', [])
         search_summary = data.get('search_summary', {})
         
+        # Handle case where no patterns are found - critical risk disclosure
         if not similar_patterns:
             return f"""
 📊 EXECUTIVE SUMMARY
@@ -108,16 +245,20 @@ unique or that insufficient historical data is available for comparison.
 Recommendation: Exercise caution and consider additional analysis methods.
             """
         
+        # Analyze the highest-quality pattern for confidence assessment
         top_pattern = similar_patterns[0]
         similarity_score = top_pattern.get('similarity_score', 0)
         confidence_desc = self._get_confidence_description(similarity_score)
         
-        # Analyze outcomes from top patterns
+        # Perform comprehensive outcome analysis on top patterns
+        # Focus on top 3 patterns for most reliable statistical inference
         outcomes = self._analyze_pattern_outcomes(similar_patterns[:3])
         
+        # Extract metadata for context and scope
         total_patterns = len(similar_patterns)
         data_period = search_summary.get('data_period', 'Unknown period')
         
+        # Generate comprehensive executive summary with key business insights
         return f"""
 📊 EXECUTIVE SUMMARY
 ═══════════════════════════════════════════════════════════════════════════════
@@ -136,22 +277,55 @@ Investment Thesis: {outcomes['investment_thesis']}
         """
 
     def _generate_current_analysis(self, data: Dict[str, Any]) -> str:
-        """Generate current market condition analysis."""
+        """
+        Generate Current Market Conditions Analysis
+        
+        Translates technical indicators into business-friendly market condition assessment.
+        This section provides immediate context for the current trading environment and
+        helps stakeholders understand the backdrop against which historical patterns
+        are being compared.
+        
+        Technical Indicators Analyzed:
+        - RSI (Relative Strength Index): Market momentum and overbought/oversold conditions
+        - ATR Percentile: Volatility environment and risk assessment
+        - MACD Trend: Directional bias and trend strength
+        - Volume ROC: Market participation and conviction levels
+        
+        Args:
+            data: Analysis data containing current window with technical features
+            
+        Returns:
+            Current market analysis section with business interpretations
+            
+        Business Value:
+        - Provides immediate market context for decision-making
+        - Translates complex technical indicators into actionable insights
+        - Establishes baseline conditions for pattern comparison
+        - Offers risk environment assessment for position sizing
+        """
+        # Extract current market data and technical features
         current_window = data.get('current_window', {})
         features = current_window.get('features', {})
         
-        # RSI Analysis
+        # Generate business-friendly analysis for each major technical dimension
+        
+        # RSI Analysis: Momentum and overbought/oversold assessment
+        # Critical for understanding market sentiment and potential reversal points
         rsi_analysis = self._analyze_rsi(features.get('rsi_values', []))
         
-        # Volatility Analysis
+        # Volatility Analysis: Risk environment and market uncertainty
+        # Essential for position sizing and risk management decisions
         volatility_analysis = self._analyze_volatility(features.get('atr_percentile_values', []))
         
-        # Trend Analysis
+        # Trend Analysis: Directional bias and momentum sustainability
+        # Key for understanding prevailing market forces and continuation probability
         trend_analysis = self._analyze_trend(features)
         
-        # Volume Analysis
+        # Volume Analysis: Market participation and conviction assessment
+        # Important for validating price movements and institutional interest
         volume_analysis = self._analyze_volume(features.get('volume_roc_values', []))
         
+        # Synthesize overall market assessment and outlook
         return f"""
 📈 CURRENT MARKET CONDITIONS ANALYSIS
 ═══════════════════════════════════════════════════════════════════════════════
@@ -173,9 +347,36 @@ characteristics, suggesting {self._get_market_outlook(features)} in the near ter
         """
 
     def _generate_pattern_analysis(self, data: Dict[str, Any]) -> str:
-        """Generate historical pattern analysis."""
+        """
+        Generate Historical Pattern Analysis Section
+        
+        Provides comprehensive analysis of historically similar market periods,
+        offering crucial context for understanding the reliability and precedent
+        of current market conditions. This section transforms quantitative 
+        similarity scores into qualitative business insights.
+        
+        Analysis Dimensions:
+        - Pattern Quality: Distribution of similarity scores and confidence levels
+        - Seasonal Context: When similar patterns historically occurred
+        - Historical Context: Decade-based distribution and market regime analysis
+        - Reliability Assessment: Statistical consistency and pattern dependability
+        
+        Args:
+            data: Analysis data containing similar_patterns list
+            
+        Returns:
+            Historical pattern analysis section with business context
+            
+        Business Intelligence:
+        - Validates current analysis against historical precedent
+        - Identifies seasonal biases and temporal patterns
+        - Provides confidence assessment for decision-making
+        - Offers market regime context for risk assessment
+        """
+        # Extract historical pattern data for analysis
         similar_patterns = data.get('similar_patterns', [])
         
+        # Handle case of insufficient historical precedent - critical for risk assessment
         if not similar_patterns:
             return """
 🔍 HISTORICAL PATTERN ANALYSIS
@@ -185,10 +386,21 @@ No similar historical patterns were identified with sufficient confidence levels
 This suggests the current market conditions may be unusual or unprecedented.
             """
         
+        # Generate comprehensive pattern analysis across multiple dimensions
+        
+        # Pattern Quality Analysis: Distribution of similarity scores and pattern count
+        # Essential for understanding the statistical foundation of the analysis
         pattern_summary = self._summarize_patterns(similar_patterns)
+        
+        # Seasonal Analysis: When similar patterns historically occurred
+        # Critical for understanding cyclical market behavior and timing biases
         seasonal_analysis = self._analyze_seasonal_patterns(similar_patterns)
+        
+        # Decade Analysis: Historical distribution across different market eras
+        # Important for understanding market regime changes and secular trends
         decade_analysis = self._analyze_decade_patterns(similar_patterns)
         
+        # Synthesize comprehensive historical pattern analysis
         return f"""
 🔍 HISTORICAL PATTERN ANALYSIS
 ═══════════════════════════════════════════════════════════════════════════════
@@ -206,10 +418,38 @@ Pattern Reliability: {self._assess_pattern_reliability(similar_patterns)}
         """
 
     def _generate_risk_assessment(self, data: Dict[str, Any]) -> str:
-        """Generate comprehensive risk assessment."""
+        """
+        Generate Comprehensive Risk Assessment - Critical for Investment Decisions
+        
+        This method performs multi-dimensional risk analysis combining historical
+        precedent with current market conditions to provide specific, actionable
+        risk management guidance. It's essential for position sizing and risk
+        management decisions.
+        
+        Risk Assessment Framework:
+        1. Historical Downside Analysis: Probability and magnitude of negative outcomes
+        2. Volatility Risk Assessment: Current market uncertainty and price stability
+        3. Pattern Consistency Analysis: Reliability of historical precedents
+        4. Integrated Risk Rating: Combined assessment with specific mitigation strategies
+        
+        Args:
+            data: Analysis data with patterns and current market conditions
+            
+        Returns:
+            Comprehensive risk assessment with specific recommendations
+            
+        Business Critical Elements:
+        - Quantified downside probability based on historical evidence
+        - Specific position sizing recommendations
+        - Actionable risk mitigation strategies
+        - Maximum historical decline analysis for worst-case scenario planning
+        - Current volatility environment assessment
+        """
+        # Extract data for comprehensive risk analysis
         similar_patterns = data.get('similar_patterns', [])
         current_window = data.get('current_window', {})
         
+        # Handle high-risk scenario of insufficient historical data
         if not similar_patterns:
             return """
 ⚠️  RISK ASSESSMENT
@@ -220,12 +460,24 @@ Primary Concerns: Lack of comparable historical patterns increases uncertainty
 Recommendation: Exercise extreme caution and consider position sizing accordingly
             """
         
+        # Perform multi-dimensional risk analysis
+        
+        # Historical Risk Metrics: Quantify downside probability and magnitude
+        # Critical for understanding potential losses based on historical precedent
         risk_metrics = self._calculate_risk_metrics(similar_patterns)
+        
+        # Current Volatility Risk: Assess immediate market uncertainty
+        # Essential for understanding current risk environment
         volatility_risk = self._assess_volatility_risk(current_window)
+        
+        # Pattern Consistency: Evaluate reliability of historical analysis
+        # Important for confidence in risk projections
         pattern_consistency = self._assess_pattern_consistency(similar_patterns)
         
+        # Integrated Risk Assessment: Combine all factors into actionable guidance
         overall_risk = self._determine_overall_risk(risk_metrics, volatility_risk, pattern_consistency)
         
+        # Generate comprehensive risk assessment with specific recommendations
         return f"""
 ⚠️  RISK ASSESSMENT
 ═══════════════════════════════════════════════════════════════════════════════
@@ -400,7 +652,40 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
         return 'very low confidence'
 
     def _analyze_pattern_outcomes(self, patterns: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Analyze outcomes from multiple patterns."""
+        """
+        Analyze Historical Pattern Outcomes - Core Intelligence Engine
+        
+        This method performs comprehensive statistical analysis of historical pattern
+        outcomes to generate actionable investment insights. It transforms raw historical
+        data into business intelligence by analyzing success rates, volatility, and
+        market regime characteristics.
+        
+        Statistical Analysis Process:
+        1. Extract 1-month forward returns from historical patterns
+        2. Calculate success rate (percentage of positive outcomes)
+        3. Compute average returns and volatility metrics
+        4. Classify trend characteristics and market regime
+        5. Generate evidence-based investment thesis
+        
+        Args:
+            patterns: List of historical patterns with 'what_happened_next' data
+            
+        Returns:
+            Dictionary with comprehensive outcome analysis including:
+            - primary_trend: Expected market direction based on historical evidence
+            - risk_level: Volatility-based risk assessment
+            - success_rate: Percentage of historically positive outcomes
+            - market_regime: Overall market environment characterization
+            - investment_thesis: Evidence-based investment recommendation
+            
+        Business Intelligence Generated:
+        - Trend Analysis: Direction and magnitude of expected movement
+        - Risk Assessment: Volatility-based risk characterization
+        - Success Probability: Historical win rate for similar patterns
+        - Market Regime Classification: Overall environment assessment
+        - Investment Thesis: Comprehensive recommendation synthesis
+        """
+        # Handle insufficient data scenario with appropriate risk disclosure
         if not patterns:
             return {
                 'primary_trend': 'uncertain direction',
@@ -410,7 +695,8 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
                 'investment_thesis': 'Insufficient data for reliable analysis'
             }
         
-        # Analyze 1-month outcomes
+        # Extract 1-month forward returns for statistical analysis
+        # Focus on 1-month horizon as optimal balance between noise and signal
         monthly_returns = []
         positive_outcomes = 0
         
@@ -423,6 +709,7 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
                 if return_pct > 0:
                     positive_outcomes += 1
         
+        # Validate sufficient outcome data for reliable analysis
         if not monthly_returns:
             return {
                 'primary_trend': 'uncertain direction',
@@ -432,11 +719,13 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
                 'investment_thesis': 'Insufficient outcome data for analysis'
             }
         
+        # Calculate core statistical metrics for business intelligence
         avg_return = statistics.mean(monthly_returns)
         success_rate = (positive_outcomes / len(monthly_returns)) * 100
         volatility = statistics.stdev(monthly_returns) if len(monthly_returns) > 1 else 0
         
-        # Determine primary trend
+        # Classify primary trend based on historical return magnitude
+        # Thresholds designed for practical investment decision-making
         if avg_return > 5:
             primary_trend = 'strong upward movement'
         elif avg_return > 0:
@@ -446,7 +735,8 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
         else:
             primary_trend = 'downward movement'
         
-        # Determine risk level
+        # Assess risk level based on historical return volatility
+        # Critical for position sizing and risk management decisions
         if volatility > 15:
             risk_level = 'high'
         elif volatility > 8:
@@ -456,7 +746,8 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
         else:
             risk_level = 'low to moderate'
         
-        # Market regime
+        # Classify market regime based on success rate
+        # Provides strategic context for investment approach
         if success_rate > 70:
             market_regime = 'favorable for bullish strategies'
         elif success_rate > 50:
@@ -466,7 +757,8 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
         else:
             market_regime = 'predominantly bearish'
         
-        # Investment thesis
+        # Generate evidence-based investment thesis
+        # Synthesizes all analysis into actionable recommendation
         if success_rate > 60 and avg_return > 2:
             thesis = 'Historical patterns support a cautiously optimistic outlook with managed risk exposure'
         elif success_rate > 50:
@@ -474,6 +766,7 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
         else:
             thesis = 'Historical patterns indicate elevated risk; consider defensive positioning'
         
+        # Return comprehensive outcome analysis for report generation
         return {
             'primary_trend': primary_trend,
             'risk_level': risk_level,
@@ -483,13 +776,42 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
         }
 
     def _analyze_rsi(self, rsi_values: List[float]) -> str:
-        """Analyze RSI values and return business description."""
+        """
+        Analyze RSI (Relative Strength Index) - Momentum and Sentiment Indicator
+        
+        Translates technical RSI readings into business-friendly momentum analysis.
+        RSI is critical for understanding market sentiment, overbought/oversold conditions,
+        and potential reversal points that impact investment timing decisions.
+        
+        RSI Interpretation Framework:
+        - 70+: Overbought territory, potential selling pressure
+        - 60-70: Strong bullish momentum, continued upside potential
+        - 40-60: Neutral momentum, consolidation or indecision
+        - 30-40: Weak momentum, downside pressure likely
+        - <30: Oversold territory, potential buying opportunity
+        
+        Args:
+            rsi_values: List of RSI values from the current window (7-day period)
+            
+        Returns:
+            Business-friendly RSI analysis with momentum assessment and trend direction
+            
+        Business Value:
+        - Identifies optimal entry/exit timing based on momentum extremes
+        - Provides sentiment assessment for market positioning
+        - Warns of potential reversal conditions for risk management
+        - Offers trend sustainability analysis for position holding decisions
+        """
+        # Validate RSI data availability
         if not rsi_values:
             return "• RSI data unavailable - cannot assess momentum conditions"
         
+        # Extract current RSI reading and calculate trend direction
         current_rsi = rsi_values[-1]
         rsi_trend = rsi_values[-1] - rsi_values[0] if len(rsi_values) > 1 else 0
         
+        # Interpret RSI level using business-friendly momentum analysis
+        # Thresholds based on standard technical analysis best practices
         if current_rsi > 70:
             momentum = "overbought conditions suggest potential selling pressure"
         elif current_rsi < 30:
@@ -501,8 +823,10 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
         else:
             momentum = "neutral momentum suggests consolidation or indecision"
         
+        # Assess RSI trend direction for momentum sustainability analysis
         trend_desc = "strengthening" if rsi_trend > 5 else "weakening" if rsi_trend < -5 else "stable"
         
+        # Generate comprehensive momentum assessment with specific readings
         return f"• Current momentum shows {momentum} (RSI: {current_rsi:.1f}, trend: {trend_desc})"
 
     def _analyze_volatility(self, atr_values: List[float]) -> str:
@@ -866,30 +1190,66 @@ Generated by Financial Agent v1.0 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S'
 
 def generate_report_from_json(json_file_path: str, output_file_path: Optional[str] = None) -> str:
     """
-    Generate a natural language report from a JSON analysis file.
+    Module-Level Report Generation Interface
+    
+    Primary external interface for converting JSON analysis files into comprehensive
+    natural language business reports. This function serves as the main entry point
+    for standalone report generation and integration with other system components.
+    
+    Workflow:
+    1. Load and validate JSON analysis data from file
+    2. Initialize the report generator with business intelligence frameworks
+    3. Generate comprehensive natural language report
+    4. Optionally save to file for distribution
+    5. Return report string for immediate use or further processing
     
     Args:
-        json_file_path: Path to the JSON analysis file
-        output_file_path: Optional path to save the report (if None, returns string only)
+        json_file_path: Path to JSON file containing complete analysis results from pattern_searcher
+        output_file_path: Optional path for saving the formatted report (if None, returns string only)
         
     Returns:
-        The generated report as a string
+        Complete natural language report as formatted string ready for business presentation
+        
+    Integration Points:
+    - Used by generate_report.py for standalone report generation
+    - Called by run_analysis.py for integrated analysis and reporting
+    - Supports both file output and programmatic string return
+    - Handles all error conditions gracefully with informative messages
+    
+    Error Handling:
+    - File I/O errors (missing files, permissions, encoding issues)
+    - JSON parsing errors (malformed analysis data)
+    - Report generation errors (missing required data fields)
+    - Output file errors (directory permissions, disk space)
+    
+    Business Value:
+    - Enables standalone report generation from saved analysis results
+    - Provides flexible output options for different use cases
+    - Ensures consistent error handling and user feedback
+    - Facilitates batch processing and automated report generation
     """
     try:
+        # Load and parse JSON analysis data with error handling
         with open(json_file_path, 'r') as f:
             analysis_data = json.load(f)
         
+        # Initialize report generator with business intelligence frameworks
         generator = NaturalLanguageReportGenerator()
+        
+        # Generate comprehensive natural language report
         report = generator.generate_full_report(analysis_data)
         
+        # Optionally save report to file for distribution
         if output_file_path:
             with open(output_file_path, 'w', encoding='utf-8') as f:
                 f.write(report)
             print(f"Report saved to: {output_file_path}")
         
+        # Return report string for immediate use or further processing
         return report
         
     except Exception as e:
+        # Generate informative error message for troubleshooting
         error_msg = f"Error generating report: {str(e)}"
         print(error_msg)
         return error_msg

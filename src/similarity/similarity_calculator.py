@@ -162,40 +162,69 @@ class SimilarityCalculator:
     def rank_similarities(self, similarities: np.ndarray, 
                          metadata: List[Dict[str, any]]) -> List[Dict[str, any]]:
         """
-        Rank similarity results and combine with metadata.
+        Rank similarity results and combine with metadata for comprehensive analysis.
+        
+        This method transforms raw similarity scores into a structured, ranked list
+        suitable for business analysis and decision-making. The ranking process
+        combines mathematical similarity with contextual metadata to provide
+        actionable insights.
+        
+        **Ranking Process:**
+        1. **Score Integration**: Combine similarity scores with metadata
+        2. **Descending Sort**: Order by similarity score (highest first)
+        3. **Rank Assignment**: Add sequential rank numbers for easy reference
+        4. **Threshold Filtering**: Remove patterns below minimum similarity
+        5. **Result Limiting**: Cap results to prevent information overload
+        
+        **Business Value:**
+        - Provides clear hierarchy of pattern similarity
+        - Enables focus on most relevant historical precedents
+        - Supports evidence-based investment decisions
+        - Facilitates communication of findings to stakeholders
         
         Args:
-            similarities (np.ndarray): Array of similarity scores
-            metadata (List[Dict]): Metadata for each comparison (same order as similarities)
+            similarities (np.ndarray): Array of similarity scores (0-1 range)
+            metadata (List[Dict]): Metadata for each comparison in same order
+                                  Contains dates, indices, and other contextual info
             
         Returns:
-            List[Dict]: Ranked results with similarity scores and metadata
+            List[Dict[str, any]]: Ranked results with similarity scores and metadata
+                                 Each entry contains rank, score, and temporal context
+            
+        Raises:
+            ValueError: If similarities and metadata lengths don't match
         """
+        # Validate input alignment - critical for accurate results
         if len(similarities) != len(metadata):
             raise ValueError(f"Length mismatch: {len(similarities)} similarities vs {len(metadata)} metadata")
         
-        # Combine similarities with metadata
+        # Combine similarities with metadata for unified processing
         results = []
         for i, (similarity, meta) in enumerate(zip(similarities, metadata)):
             result = {
-                'similarity_score': float(similarity),
+                'similarity_score': float(similarity),  # Ensure consistent data type
                 'rank': None,  # Will be set after sorting
-                'index': i,
-                **meta  # Include all metadata
+                'index': i,    # Original index for tracking
+                **meta  # Include all metadata (dates, indices, quality scores, etc.)
             }
             results.append(result)
         
-        # Sort by similarity score (descending)
+        # Sort by similarity score in descending order (highest similarity first)
+        # This prioritizes the most similar patterns for analysis
         results.sort(key=lambda x: x['similarity_score'], reverse=True)
         
-        # Add rank information
+        # Add rank information for easy reference and communication
+        # Rank 1 = most similar, Rank 2 = second most similar, etc.
         for rank, result in enumerate(results, 1):
             result['rank'] = rank
         
-        # Apply similarity threshold filter
+        # Apply similarity threshold filter to ensure quality
+        # Only return patterns that meet minimum similarity criteria
+        # This prevents weak patterns from diluting analysis quality
         filtered_results = [r for r in results if r['similarity_score'] >= self.similarity_threshold]
         
-        # Limit to max results
+        # Limit to maximum results to prevent information overload
+        # Focus on top patterns rather than overwhelming with marginal matches
         limited_results = filtered_results[:self.max_results]
         
         return limited_results
@@ -204,72 +233,110 @@ class SimilarityCalculator:
                             historical_windows: List[Dict[str, any]],
                             apply_gap_filter: bool = True) -> List[Dict[str, any]]:
         """
-        Find historical windows similar to target window.
+        Find historical windows most similar to target window using comprehensive matching.
+        
+        This is the primary method for pattern discovery that orchestrates the complete
+        similarity search workflow. It handles data validation, gap filtering, batch
+        similarity calculation, and result ranking to identify the most relevant
+        historical precedents for current market conditions.
+        
+        **Complete Search Workflow:**
+        1. **Input Validation**: Ensure target window has valid feature vector
+        2. **Gap Filtering**: Remove overlapping windows for statistical independence
+        3. **Vector Extraction**: Prepare historical vectors for batch comparison
+        4. **Similarity Calculation**: Compute cosine similarity against all candidates
+        5. **Result Ranking**: Sort and filter based on similarity thresholds
+        6. **Quality Control**: Return only high-confidence pattern matches
+        
+        **Gap Filtering Logic:**
+        Prevents contamination from overlapping time periods that share market data.
+        For example, if target window ends on 2023-12-15, exclude historical windows
+        ending between 2023-12-08 and 2023-12-22 (assuming 7-day minimum gap).
+        This ensures statistical independence between compared patterns.
         
         Args:
-            target_window (Dict): Target window with feature_vector
-            historical_windows (List[Dict]): List of historical windows to compare
-            apply_gap_filter (bool): Whether to apply minimum gap filtering
+            target_window (Dict[str, any]): Target window with feature_vector and metadata
+            historical_windows (List[Dict[str, any]]): Historical windows to search
+            apply_gap_filter (bool): Whether to enforce minimum gap for independence
             
         Returns:
-            List[Dict]: Ranked similar patterns with similarity scores
+            List[Dict[str, any]]: Ranked similar patterns with scores and metadata
+                                 Empty list if no patterns meet similarity criteria
+            
+        Raises:
+            ValueError: If target window lacks required feature vector
         """
+        # Early exit for empty historical data
         if not historical_windows:
             return []
         
+        # Validate target window has required feature vector
         target_vector = target_window.get('feature_vector')
         if target_vector is None:
             raise ValueError("Target window missing feature_vector")
         
-        # Filter by gap if requested
+        # Apply gap filtering to ensure statistical independence
         valid_windows = historical_windows
         if apply_gap_filter:
-            target_end_idx = target_window.get('window_end_idx')
+            # Get target window end index for gap calculation
+            target_end_idx = target_window.get('window_end_index') or target_window.get('window_end_idx')
+            
             if target_end_idx is not None:
                 valid_windows = []
                 for window in historical_windows:
-                    window_end_idx = window.get('window_end_idx')
+                    # Check multiple possible keys for window end index
+                    window_end_idx = window.get('window_end_index') or window.get('window_end_idx')
+                    
                     if window_end_idx is not None:
+                        # Calculate temporal gap between windows
                         gap = abs(target_end_idx - window_end_idx)
+                        
+                        # Only include windows with sufficient gap for independence
                         if gap >= self.min_gap_days:
                             valid_windows.append(window)
         
+        # Check if gap filtering eliminated all candidates
         if not valid_windows:
             print(f"⚠ No windows meet gap requirement of {self.min_gap_days} days")
             return []
         
         print(f"📊 Comparing target window against {len(valid_windows)} historical windows...")
         
-        # Extract feature vectors and metadata
+        # Extract feature vectors and metadata for batch processing
         comparison_vectors = []
         metadata = []
         
         for window in valid_windows:
             vector = window.get('feature_vector')
+            
+            # Only process windows with valid feature vectors
             if vector is not None and len(vector) > 0:
                 comparison_vectors.append(vector)
                 
-                # Create metadata for this window
+                # Create comprehensive metadata for result interpretation
                 meta = {
                     'window_start_date': window.get('window_start_date'),
                     'window_end_date': window.get('window_end_date'),
                     'window_start_idx': window.get('window_start_idx'),
                     'window_end_idx': window.get('window_end_idx'),
-                    'vector_length': len(vector)
+                    'window_end_index': window.get('window_end_index'),  # Alternative key
+                    'vector_length': len(vector),
+                    'data_quality_score': window.get('data_quality_score', 1.0)
                 }
                 metadata.append(meta)
         
+        # Validate we have vectors to compare against
         if not comparison_vectors:
             print("⚠ No valid feature vectors found in historical windows")
             return []
         
-        # Convert to numpy array
+        # Convert to numpy array for efficient batch processing
         comparison_matrix = np.array(comparison_vectors)
         
-        # Calculate similarities
+        # Perform batch similarity calculation for performance
         similarities = self.calculate_batch_similarity(target_vector, comparison_matrix)
         
-        # Rank and filter results
+        # Rank and filter results based on similarity scores
         ranked_results = self.rank_similarities(similarities, metadata)
         
         print(f"✓ Found {len(ranked_results)} similar patterns above threshold {self.similarity_threshold}")
@@ -278,14 +345,31 @@ class SimilarityCalculator:
     
     def get_similarity_statistics(self, similarities: List[float]) -> Dict[str, float]:
         """
-        Calculate statistics for a set of similarity scores.
+        Calculate comprehensive statistics for similarity score analysis.
+        
+        Provides detailed statistical analysis of similarity scores to support
+        decision-making and result interpretation. These statistics help assess
+        the quality and confidence of pattern matching results.
+        
+        **Statistical Measures:**
+        - **Central Tendency**: Mean and median for typical similarity levels
+        - **Variability**: Standard deviation for score consistency assessment
+        - **Range**: Min/max for understanding score distribution
+        - **Percentiles**: Quartiles for detailed distribution analysis
+        
+        **Business Applications:**
+        - Quality assessment: High mean/median suggests good pattern matching
+        - Confidence evaluation: Low std deviation suggests consistent results
+        - Outlier detection: Large range may indicate mixed pattern quality
+        - Threshold optimization: Percentiles help set appropriate cutoffs
         
         Args:
-            similarities (List[float]): List of similarity scores
+            similarities (List[float]): List of similarity scores (0-1 range)
             
         Returns:
-            Dict[str, float]: Statistical summary
+            Dict[str, float]: Comprehensive statistical summary with all key measures
         """
+        # Handle empty input gracefully
         if not similarities:
             return {
                 'count': 0,
@@ -293,33 +377,70 @@ class SimilarityCalculator:
                 'std': 0.0,
                 'min': 0.0,
                 'max': 0.0,
-                'median': 0.0
+                'median': 0.0,
+                'q25': 0.0,
+                'q75': 0.0
             }
         
+        # Convert to numpy for efficient statistical calculations
         similarities_array = np.array(similarities)
         
         return {
-            'count': len(similarities),
-            'mean': float(np.mean(similarities_array)),
-            'std': float(np.std(similarities_array)),
-            'min': float(np.min(similarities_array)),
-            'max': float(np.max(similarities_array)),
-            'median': float(np.median(similarities_array)),
-            'q25': float(np.percentile(similarities_array, 25)),
-            'q75': float(np.percentile(similarities_array, 75))
+            # Basic counts and central tendency
+            'count': len(similarities),                                   # Number of patterns analyzed
+            'mean': float(np.mean(similarities_array)),                  # Average similarity level
+            'median': float(np.median(similarities_array)),              # Middle similarity value
+            
+            # Variability measures
+            'std': float(np.std(similarities_array)),                    # Score consistency indicator
+            'min': float(np.min(similarities_array)),                    # Lowest similarity found
+            'max': float(np.max(similarities_array)),                    # Highest similarity found
+            
+            # Distribution analysis
+            'q25': float(np.percentile(similarities_array, 25)),         # 25th percentile (lower quartile)
+            'q75': float(np.percentile(similarities_array, 75))          # 75th percentile (upper quartile)
         }
     
     def get_similarity_level(self, similarity: float) -> str:
-        """Get descriptive similarity level."""
+        """
+        Convert numerical similarity score to business-friendly descriptive level.
+        
+        Transforms mathematical similarity values into intuitive categories that
+        business users can easily understand and act upon. These categories help
+        communicate confidence levels and support decision-making processes.
+        
+        **Similarity Level Mapping:**
+        - Very High (≥90%): Exceptional similarity, high confidence patterns
+        - High (80-89%): Strong similarity, reliable patterns for analysis
+        - Medium-High (70-79%): Good similarity, useful for context
+        - Medium (60-69%): Moderate similarity, use with caution
+        - Low-Medium (50-59%): Weak similarity, limited relevance
+        - Low (<50%): Poor similarity, likely not meaningful
+        
+        **Business Usage:**
+        - Investment decisions: Focus on "High" and "Very High" patterns
+        - Risk assessment: Consider "Medium-High" for additional context
+        - Research analysis: Include "Medium" patterns for comprehensive study
+        - Communication: Use descriptive levels in reports and presentations
+        
+        Args:
+            similarity (float): Numerical similarity score (0-1 range)
+            
+        Returns:
+            str: Business-friendly descriptive similarity level
+        """
+        # Define similarity thresholds based on practical experience
+        # These thresholds balance sensitivity with specificity for business use
+        
         if similarity >= 0.90:
-            return "Very High"
+            return "Very High"      # Exceptional patterns, act with confidence
         elif similarity >= 0.80:
-            return "High"
+            return "High"           # Strong patterns, reliable for decisions
         elif similarity >= 0.70:
-            return "Medium-High"
+            return "Medium-High"    # Good patterns, useful for context
         elif similarity >= 0.60:
-            return "Medium"
+            return "Medium"         # Moderate patterns, use with caution
         elif similarity >= 0.50:
-            return "Low-Medium"
+            return "Low-Medium"     # Weak patterns, limited value
         else:
-            return "Low" 
+            return "Low"            # Poor patterns, likely not meaningful 
