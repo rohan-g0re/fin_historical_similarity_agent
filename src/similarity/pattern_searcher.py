@@ -126,7 +126,7 @@ class PatternSearcher:
         }
     
     def search_similar_patterns(self, symbol: str, target_date: Optional[str] = None,
-                               start_date: Optional[str] = None,
+                              start_date: Optional[str] = None,
                                apply_filtering: bool = True) -> Dict[str, any]:
         """
         Search for historical patterns similar to current/specified market conditions.
@@ -214,7 +214,7 @@ class PatternSearcher:
             
             # Step 4: Similarity Calculation and Ranking
             print("📈 Step 4: Calculating similarities and ranking results...")
-            similar_patterns = self.similarity_calculator.find_similar_patterns(
+        similar_patterns = self.similarity_calculator.find_similar_patterns(
                 current_window, 
                 historical_windows,
                 apply_gap_filter=apply_filtering
@@ -443,7 +443,7 @@ class PatternSearcher:
                 regime['price_position'] = 'UPPER_EXTREME'
             elif avg_bb_pos < 0.2:
                 regime['price_position'] = 'LOWER_EXTREME'
-            else:
+                else:
                 regime['price_position'] = 'MIDDLE_RANGE'
         
         return regime
@@ -642,7 +642,7 @@ class PatternSearcher:
             consistency_score = 0.8
         elif score_std <= 0.15:
             consistency_score = 0.6
-        else:
+            else:
             consistency_score = 0.4
         
         confidence['factors']['score_consistency'] = consistency_score
