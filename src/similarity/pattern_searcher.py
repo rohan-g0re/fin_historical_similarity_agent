@@ -214,7 +214,7 @@ class PatternSearcher:
             
             # Step 4: Similarity Calculation and Ranking
             print("📈 Step 4: Calculating similarities and ranking results...")
-        similar_patterns = self.similarity_calculator.find_similar_patterns(
+            similar_patterns = self.similarity_calculator.find_similar_patterns(
                 current_window, 
                 historical_windows,
                 apply_gap_filter=apply_filtering
@@ -228,6 +228,9 @@ class PatternSearcher:
                 market_regime,
                 len(historical_windows)
             )
+            
+            # Add symbol to results for business report generation
+            search_results['symbol'] = symbol
             
             # Performance tracking
             search_time = (datetime.now() - search_start_time).total_seconds()
@@ -282,6 +285,9 @@ class PatternSearcher:
         
         # Validate final dataset quality
         self._validate_prepared_data(enhanced_data, symbol)
+        
+        # Pass the original data to similarity calculator for forward return calculations
+        self.similarity_calculator.set_original_data(enhanced_data)
         
         return enhanced_data
     
@@ -443,7 +449,7 @@ class PatternSearcher:
                 regime['price_position'] = 'UPPER_EXTREME'
             elif avg_bb_pos < 0.2:
                 regime['price_position'] = 'LOWER_EXTREME'
-                else:
+            else:
                 regime['price_position'] = 'MIDDLE_RANGE'
         
         return regime
@@ -564,15 +570,20 @@ class PatternSearcher:
             'search_metadata': {
                 'timestamp': datetime.now().isoformat(),
                 'total_patterns_searched': total_windows_searched,
+                'total_historical_windows': total_windows_searched,
                 'patterns_found': len(similar_patterns),
-                'search_quality': 'HIGH' if len(similar_patterns) >= 5 else 'MEDIUM' if len(similar_patterns) >= 2 else 'LOW'
+                'similar_patterns_found': len(similar_patterns),
+                'search_quality': 'HIGH' if len(similar_patterns) >= 5 else 'MEDIUM' if len(similar_patterns) >= 2 else 'LOW',
+                'data_period': f"Historical analysis from {len(enhanced_patterns)} periods"
             },
+            'current_window': current_window,
             'current_conditions': {
                 'window_period': f"{current_window.get('window_start_date', 'Unknown')} to {current_window.get('window_end_date', 'Unknown')}",
                 'market_regime': market_regime,
                 'vector_dimensions': current_window.get('vector_length', 0)
             },
             'similar_patterns': enhanced_patterns,
+            'search_summary': search_statistics,
             'search_statistics': search_statistics,
             'confidence_assessment': confidence_assessment,
             'interpretation': self._generate_interpretation(enhanced_patterns, market_regime, search_statistics)
@@ -642,7 +653,7 @@ class PatternSearcher:
             consistency_score = 0.8
         elif score_std <= 0.15:
             consistency_score = 0.6
-            else:
+        else:
             consistency_score = 0.4
         
         confidence['factors']['score_consistency'] = consistency_score

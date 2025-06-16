@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Financial Agent - Command Line Interface
-Run pattern analysis on any stock symbol from the terminal.
+Financial Agent - Interactive Command Line Interface
+Run pattern analysis on any stock symbol interactively.
 
 This is the main entry point for the Financial Pattern Analysis System.
-It provides both interactive and command-line interfaces for:
+It provides an interactive interface for:
 1. Collecting financial data for any stock symbol
 2. Running pattern matching analysis against historical data
 3. Generating both technical JSON reports and business-friendly natural language reports
@@ -14,14 +14,10 @@ The system implements a 5-indicator methodology using 7-day market windows
 to find similar historical patterns using cosine similarity calculations.
 
 Usage:
-    python run_analysis.py AAPL
-    python run_analysis.py MSFT --top-k 15
-    python run_analysis.py --interactive
-    python run_analysis.py AAPL --generate-report
+    python run_analysis.py
 """
 
 import sys
-import argparse
 import json
 from datetime import datetime
 from pathlib import Path
@@ -43,7 +39,7 @@ def print_banner():
     print("=" * 60)
     print("🚀 FINANCIAL AGENT - PATTERN ANALYSIS SYSTEM")
     print("=" * 60)
-    print("Find similar historical patterns for any stock symbol")
+    print("Interactive analysis for any stock symbol")
     print()
 
 
@@ -63,7 +59,6 @@ def print_target_analysis(current_window):
     """
     print("🎯 TARGET PATTERN ANALYSIS")
     print("-" * 40)
-    print(f"📅 Date Range: {current_window.get('window_start_date', 'N/A')} to {current_window.get('window_end_date', 'N/A')}")
     
     # Extract features and calculate zones - technical indicators are pre-calculated
     features = current_window.get('features', {})
@@ -131,15 +126,23 @@ def print_search_summary(search_summary, processing_time_ms=0):
     """
     print("📈 SEARCH SUMMARY")
     print("-" * 40)
-    # Total windows shows the breadth of historical analysis
-    print(f"🔍 Total Historical Windows: {search_summary.get('total_historical_windows', 'N/A'):,}")
-    # Filtered windows shows how many passed basic market regime filters
-    print(f"🔍 Filtered Windows: {search_summary.get('filtered_windows', 'N/A'):,}")
-    # Similar patterns shows final results after similarity threshold
-    print(f"✅ Similar Patterns Found: {search_summary.get('similar_patterns_found', 'N/A')}")
-    # Data period shows the time range of historical analysis
-    print(f"📅 Data Period: {search_summary.get('data_period', 'N/A')}")
-    # Processing time shows system performance
+    
+    # Handle different key names and ensure safe formatting
+    total_patterns = search_summary.get('total_patterns_searched', search_summary.get('total_historical_windows', 0))
+    patterns_found = search_summary.get('patterns_found', search_summary.get('similar_patterns_found', 0))
+    
+    # Safe formatting - only use comma separator for integers
+    if isinstance(total_patterns, int):
+        print(f"🔍 Total Historical Windows: {total_patterns:,}")
+    else:
+        print(f"🔍 Total Historical Windows: {total_patterns}")
+    
+    if isinstance(patterns_found, int):
+        print(f"✅ Similar Patterns Found: {patterns_found}")
+    else:
+        print(f"✅ Similar Patterns Found: {patterns_found}")
+    
+    # Processing time
     print(f"⚡ Processing Time: {processing_time_ms:.1f}ms")
     print()
 
@@ -341,8 +344,8 @@ def run_analysis(symbol, top_k=10, show_detailed=False, generate_report=False):
         processing_time = (end_time - start_time).total_seconds() * 1000  # Convert to milliseconds
         
         # Display analysis results in user-friendly terminal format
-        print_target_analysis(results['current_window'])
-        print_search_summary(results['search_summary'], processing_time)
+        print_target_analysis(results['current_conditions'])
+        print_search_summary(results['search_metadata'], processing_time)
         
         # Display similar periods table
         similar_periods = results.get('similar_patterns', [])
@@ -450,86 +453,20 @@ def generate_natural_language_report(json_filename, symbol):
 
 def main():
     """
-    Main function handling command line argument parsing and workflow routing.
+    Main function that runs the interactive analysis workflow.
     
-    Supports multiple interaction modes:
-    1. Direct command line: python run_analysis.py AAPL
-    2. Interactive mode: python run_analysis.py --interactive  
-    3. With options: python run_analysis.py AAPL --top-k 15 --generate-report
-    
-    Command line arguments provide automation-friendly interface while
-    interactive mode provides guided experience for new users.
+    Automatically starts in interactive mode when the script is executed.
+    Provides guided experience for users to:
+    1. Enter stock symbol
+    2. Choose analysis depth
+    3. Generate business reports
+    4. Save results for future reference
     """
-    # Set up comprehensive argument parser with examples
-    parser = argparse.ArgumentParser(
-        description="Financial Pattern Analysis System - Find similar historical market patterns",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python run_analysis.py AAPL                    # Quick analysis of Apple
-  python run_analysis.py MSFT --top-k 15         # Show top 15 results for Microsoft  
-  python run_analysis.py --interactive           # Interactive mode with menu
-  python run_analysis.py AAPL --generate-report  # Include business report
-  python run_analysis.py GOOGL --top-k 20 --generate-report  # Full analysis with report
-        """
-    )
-    
-    # Optional stock symbol argument - allows direct command line usage
-    parser.add_argument(
-        'symbol', 
-        nargs='?',  # Optional positional argument
-        help='Stock symbol to analyze (e.g., AAPL, MSFT, GOOGL)'
-    )
-    
-    # Results count option for power users
-    parser.add_argument(
-        '--top-k', 
-        type=int, 
-        default=10,
-        help='Number of top results to display (default: 10)'
-    )
-    
-    # Interactive mode for guided experience
-    parser.add_argument(
-        '--interactive', 
-        action='store_true',
-        help='Run in interactive mode with prompts'
-    )
-    
-    # Natural language report generation option
-    parser.add_argument(
-        '--generate-report', 
-        action='store_true',
-        help='Generate business-friendly natural language report'
-    )
-    
-    # Detailed analysis option for top result
-    parser.add_argument(
-        '--detailed',
-        action='store_true', 
-        help='Show detailed analysis for top result'
-    )
-    
-    args = parser.parse_args()
-    
     # Display banner for professional appearance
     print_banner()
     
-    # Route to appropriate workflow based on arguments
-    if args.interactive:
-        # Interactive mode - guided experience with menus and validation
-        symbol, top_k, detailed, generate_report = get_user_input()
-    else:
-        # Command line mode - direct execution with arguments
-        if not args.symbol:
-            # No symbol provided and not interactive - show help
-            parser.print_help()
-            return
-        
-        symbol = args.symbol.upper()  # Normalize to uppercase
-        top_k = args.top_k
-        detailed = args.detailed
-        generate_report = args.generate_report
+    # Get user preferences through interactive prompts
+    symbol, top_k, detailed, generate_report = get_user_input()
     
     # Execute the analysis workflow
     results = run_analysis(

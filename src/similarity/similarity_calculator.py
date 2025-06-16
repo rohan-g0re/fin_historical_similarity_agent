@@ -5,9 +5,10 @@ Implements high-performance similarity calculations between 7-day market windows
 - Cosine similarity for feature vector comparison
 - Batch similarity calculations for efficiency
 - Similarity ranking and scoring
+- Forward return calculations for outcome analysis
 - Robust handling of edge cases and normalization
 
-Optimized for finding similar historical market patterns.
+Optimized for finding similar historical market patterns with comprehensive outcome data.
 """
 
 import pandas as pd
@@ -16,6 +17,7 @@ from typing import Dict, List, Optional, Tuple, Union
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler
 import warnings
+from datetime import datetime, timedelta
 
 from ..core.config_manager import ConfigManager
 
@@ -29,6 +31,7 @@ class SimilarityCalculator:
     - Batch calculations for efficiency
     - Proper normalization handling
     - Similarity ranking and filtering
+    - Forward return calculation for outcome analysis
     - Edge case robustness
     """
     
@@ -52,7 +55,83 @@ class SimilarityCalculator:
         # Normalization settings
         self._scaler = StandardScaler()
         self._is_fitted = False
+        
+        # Store original data for forward return calculations
+        self._original_data = None
     
+    def set_original_data(self, data: pd.DataFrame):
+        """
+        Store original price data for forward return calculations.
+        
+        Args:
+            data (pd.DataFrame): Original OHLCV data with price information
+        """
+        self._original_data = data.copy()
+    
+    def calculate_forward_returns(self, window_end_idx: int, symbol: str = None) -> Dict[str, Dict[str, float]]:
+        """
+        Calculate forward returns from a given window end date.
+        
+        This method calculates the returns that occurred AFTER each historical pattern,
+        which is crucial for understanding what happened next and generating business insights.
+        
+        Args:
+            window_end_idx (int): Index where the pattern window ended
+            symbol (str, optional): Symbol for debugging purposes
+            
+        Returns:
+            Dict[str, Dict[str, float]]: Forward returns for different timeframes
+                                       Format: {'1_week': {'return_pct': 2.5, 'direction': 'up'}, ...}
+        """
+        if self._original_data is None:
+            return {}
+        
+        # Define forward periods to calculate
+        periods = {
+            '1_week': 5,    # 5 trading days
+            '2_weeks': 10,  # 10 trading days  
+            '1_month': 21,  # ~21 trading days
+            '3_months': 63  # ~63 trading days
+        }
+        
+        forward_returns = {}
+        
+        # Get the price at the end of the pattern window
+        if window_end_idx >= len(self._original_data):
+            return {}
+            
+        start_price = self._original_data.iloc[window_end_idx]['close']
+        
+        for period_name, trading_days in periods.items():
+            future_idx = window_end_idx + trading_days
+            
+            # Check if we have enough future data
+            if future_idx < len(self._original_data):
+                future_price = self._original_data.iloc[future_idx]['close']
+                
+                # Calculate percentage return
+                return_pct = ((future_price - start_price) / start_price) * 100
+                
+                # Determine direction
+                if return_pct > 1:
+                    direction = 'strong_up'
+                elif return_pct > 0:
+                    direction = 'up'
+                elif return_pct > -1:
+                    direction = 'down'
+                else:
+                    direction = 'strong_down'
+                
+                forward_returns[period_name] = {
+                    'return_pct': float(return_pct),
+                    'direction': direction,
+                    'start_price': float(start_price),
+                    'end_price': float(future_price),
+                    'trading_days': trading_days
+                }
+        
+        return forward_returns
+
     def calculate_cosine_similarity(self, vector1: np.ndarray, vector2: np.ndarray) -> float:
         """
         Calculate cosine similarity between two feature vectors.
@@ -198,33 +277,28 @@ class SimilarityCalculator:
         if len(similarities) != len(metadata):
             raise ValueError(f"Length mismatch: {len(similarities)} similarities vs {len(metadata)} metadata")
         
-        # Combine similarities with metadata for unified processing
-        results = []
-        for i, (similarity, meta) in enumerate(zip(similarities, metadata)):
-            result = {
-                'similarity_score': float(similarity),  # Ensure consistent data type
-                'rank': None,  # Will be set after sorting
-                'index': i,    # Original index for tracking
-                **meta  # Include all metadata (dates, indices, quality scores, etc.)
-            }
-            results.append(result)
+        # Combine scores with metadata for comprehensive ranking
+        scored_results = []
+        for i, (score, meta) in enumerate(zip(similarities, metadata)):
+            result = meta.copy()  # Preserve all metadata
+            result['similarity_score'] = float(score)
+            result['original_index'] = i
+            scored_results.append(result)
         
-        # Sort by similarity score in descending order (highest similarity first)
-        # This prioritizes the most similar patterns for analysis
-        results.sort(key=lambda x: x['similarity_score'], reverse=True)
+        # Sort by similarity score in descending order (best matches first)
+        scored_results.sort(key=lambda x: x['similarity_score'], reverse=True)
         
-        # Add rank information for easy reference and communication
-        # Rank 1 = most similar, Rank 2 = second most similar, etc.
-        for rank, result in enumerate(results, 1):
+        # Apply similarity threshold filtering - only keep high-quality matches
+        filtered_results = [
+            result for result in scored_results 
+            if result['similarity_score'] >= self.similarity_threshold
+        ]
+        
+        # Add sequential rank numbers for easy reference
+        for rank, result in enumerate(filtered_results, 1):
             result['rank'] = rank
         
-        # Apply similarity threshold filter to ensure quality
-        # Only return patterns that meet minimum similarity criteria
-        # This prevents weak patterns from diluting analysis quality
-        filtered_results = [r for r in results if r['similarity_score'] >= self.similarity_threshold]
-        
-        # Limit to maximum results to prevent information overload
-        # Focus on top patterns rather than overwhelming with marginal matches
+        # Limit results to prevent information overload
         limited_results = filtered_results[:self.max_results]
         
         return limited_results
@@ -245,8 +319,9 @@ class SimilarityCalculator:
         2. **Gap Filtering**: Remove overlapping windows for statistical independence
         3. **Vector Extraction**: Prepare historical vectors for batch comparison
         4. **Similarity Calculation**: Compute cosine similarity against all candidates
-        5. **Result Ranking**: Sort and filter based on similarity thresholds
-        6. **Quality Control**: Return only high-confidence pattern matches
+        5. **Forward Return Calculation**: Calculate what happened next for each pattern
+        6. **Result Ranking**: Sort and filter based on similarity thresholds
+        7. **Quality Control**: Return only high-confidence pattern matches
         
         **Gap Filtering Logic:**
         Prevents contamination from overlapping time periods that share market data.
@@ -260,8 +335,8 @@ class SimilarityCalculator:
             apply_gap_filter (bool): Whether to enforce minimum gap for independence
             
         Returns:
-            List[Dict[str, any]]: Ranked similar patterns with scores and metadata
-                                 Empty list if no patterns meet similarity criteria
+            List[Dict[str, any]]: Ranked similar patterns with scores, metadata, and outcomes
+                                 Each pattern includes what_happened_next data for business analysis
             
         Raises:
             ValueError: If target window lacks required feature vector
@@ -339,9 +414,61 @@ class SimilarityCalculator:
         # Rank and filter results based on similarity scores
         ranked_results = self.rank_similarities(similarities, metadata)
         
-        print(f"✓ Found {len(ranked_results)} similar patterns above threshold {self.similarity_threshold}")
+        # Calculate forward returns for each ranked result
+        print("🔮 Calculating forward returns for historical patterns...")
+        for result in ranked_results:
+            window_end_idx = result.get('window_end_idx') or result.get('window_end_index')
+            if window_end_idx is not None:
+                # Calculate what happened next after this historical pattern
+                forward_returns = self.calculate_forward_returns(window_end_idx)
+                result['what_happened_next'] = forward_returns
+                
+                # Add contextual information for business interpretation
+                result['period_context'] = self._get_period_context(window_end_idx)
+        
+        print(f"✓ Found {len(ranked_results)} similar patterns with outcome data")
         
         return ranked_results
+    
+    def _get_period_context(self, window_end_idx: int) -> Dict[str, str]:
+        """
+        Get contextual information about a historical period.
+        
+        Args:
+            window_end_idx (int): Index of the window end
+            
+        Returns:
+            Dict[str, str]: Context information including year, quarter, etc.
+        """
+        if self._original_data is None or window_end_idx >= len(self._original_data):
+            return {}
+        
+        # Get the date from the index
+        date = self._original_data.index[window_end_idx]
+        
+        # Extract temporal context
+        year = str(date.year)
+        quarter = f"Q{(date.month - 1) // 3 + 1}"
+        season = self._get_season(date.month)
+        
+        return {
+            'year': year,
+            'quarter': quarter,
+            'season': season,
+            'month': date.strftime('%B'),
+            'end_date': date.strftime('%Y-%m-%d')
+        }
+    
+    def _get_season(self, month: int) -> str:
+        """Get season based on month."""
+        if month in [12, 1, 2]:
+            return 'Winter'
+        elif month in [3, 4, 5]:
+            return 'Spring'
+        elif month in [6, 7, 8]:
+            return 'Summer'
+        else:
+            return 'Fall'
     
     def get_similarity_statistics(self, similarities: List[float]) -> Dict[str, float]:
         """
@@ -427,20 +554,17 @@ class SimilarityCalculator:
             similarity (float): Numerical similarity score (0-1 range)
             
         Returns:
-            str: Business-friendly descriptive similarity level
+            str: Business-friendly similarity level description
         """
-        # Define similarity thresholds based on practical experience
-        # These thresholds balance sensitivity with specificity for business use
-        
         if similarity >= 0.90:
-            return "Very High"      # Exceptional patterns, act with confidence
+            return "Very High"
         elif similarity >= 0.80:
-            return "High"           # Strong patterns, reliable for decisions
+            return "High"
         elif similarity >= 0.70:
-            return "Medium-High"    # Good patterns, useful for context
+            return "Medium-High"
         elif similarity >= 0.60:
-            return "Medium"         # Moderate patterns, use with caution
+            return "Medium"
         elif similarity >= 0.50:
-            return "Low-Medium"     # Weak patterns, limited value
+            return "Low-Medium"
         else:
-            return "Low"            # Poor patterns, likely not meaningful 
+            return "Low" 

@@ -238,7 +238,7 @@ Analysis Type: Historical Pattern Matching & Similarity Analysis
 📊 EXECUTIVE SUMMARY
 ═══════════════════════════════════════════════════════════════════════════════
 
-{symbol} analysis completed but no significant historical patterns were found that 
+{symbol} analysis comple~ted but no significant historical patterns were found that 
 match the current market conditions. This suggests the current situation may be 
 unique or that insufficient historical data is available for comparison.
 
